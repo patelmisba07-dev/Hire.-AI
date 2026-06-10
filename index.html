@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HireAI — Free Job Search Assistant</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8f9fb;min-height:100vh;color:#111}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:#fff;border-bottom:1px solid #f0f0f0;position:sticky;top:0;z-index:10}
+.logo{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600;color:#111}
+.logo-mark{width:32px;height:32px;border-radius:8px;background:#5f5ce8;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+.badges{display:flex;gap:7px}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+.badge-green{background:#f0fdf4;color:#15803d}
+.badge-gray{background:#f3f4f6;color:#6b7280}
+.wrap{max-width:680px;margin:0 auto;padding:24px 16px}
+.tabs{display:flex;gap:2px;background:#f3f4f6;border-radius:12px;padding:4px;margin-bottom:22px}
+.tab{flex:1;padding:9px 6px;border-radius:10px;border:none;font-size:13px;cursor:pointer;background:transparent;color:#6b7280;transition:all .15s;font-family:inherit}
+.tab.active{background:#fff;color:#111;font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.screen{display:none;animation:fadeUp .25s ease}
+.screen.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.drop-zone{border:2px dashed #e5e7eb;border-radius:14px;padding:2.2rem;text-align:center;cursor:pointer;background:#fafafa;transition:all .2s;margin-bottom:14px}
+.drop-zone:hover,.drop-zone.over{border-color:#5f5ce8;background:#f5f3ff}
+.drop-icon{font-size:32px;margin-bottom:10px}
+.drop-title{font-size:14px;font-weight:600;color:#111}
+.drop-sub{font-size:12px;color:#9ca3af;margin-top:5px}
+label.lbl{display:block;font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+textarea{width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:11px 13px;font-size:13px;font-family:monospace;color:#374151;background:#fff;resize:vertical;outline:none;line-height:1.6}
+textarea:focus{border-color:#5f5ce8;box-shadow:0 0 0 3px rgba(95,92,232,.1)}
+input[type=text]{width:100%;border:1.5px solid #e5e7eb;border-radius:10px;padding:9px 13px;font-size:13px;font-family:inherit;color:#111;background:#fff;outline:none}
+input[type=text]:focus{border-color:#5f5ce8;box-shadow:0 0 0 3px rgba(95,92,232,.1)}
+.btn{padding:9px 18px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:#5f5ce8;color:#fff}
+.btn-primary:hover{background:#4f4cd8}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-secondary{background:#fff;color:#374151;border:1.5px solid #e5e7eb}
+.btn-secondary:hover{background:#f9fafb}
+.ring-wrap{display:flex;gap:20px;justify-content:center;padding:20px;background:#fafafa;border-radius:14px;border:1px solid #f3f4f6;margin:18px 0}
+.ring-item{display:flex;flex-direction:column;align-items:center;gap:6px}
+.ring-lbl{font-size:11px;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em}
+.fix-list{display:flex;flex-direction:column;gap:8px}
+.fix-card{background:#fff;border:1px solid #f3f4f6;border-radius:11px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
+.fix-text{font-size:13px;color:#111;line-height:1.55}
+.fix-sub{font-size:11px;color:#9ca3af;margin-top:3px;text-transform:uppercase}
+.job-card{background:#fff;border:1px solid #f3f4f6;border-radius:13px;padding:14px 15px;margin-bottom:9px}
+.job-row{display:flex;gap:12px;align-items:flex-start}
+.initials-box{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.job-title{font-size:14px;font-weight:600;color:#111}
+.job-meta{font-size:12px;color:#6b7280;margin-top:3px}
+.tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px}
+.tag{font-size:11px;padding:2px 9px;border-radius:20px;background:#f3f4f6;color:#6b7280}
+.tag-match{background:#f0fdf4;color:#15803d;font-weight:600}
+.match-detail{margin-top:8px;font-size:12px;color:#6b7280;line-height:1.6}
+.tone-row{display:flex;gap:7px;flex-wrap:wrap}
+.tone-btn{font-size:12px;padding:6px 14px;border-radius:20px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;cursor:pointer;font-family:inherit;transition:all .15s}
+.tone-btn.active{background:#5f5ce8;color:#fff;border-color:#5f5ce8;font-weight:600}
+.letter-box{border:1px solid #f3f4f6;border-radius:13px;padding:20px 24px;font-size:14px;color:#374151;line-height:1.9;font-family:Georgia,serif;background:#fff;white-space:pre-wrap}
+.kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:4px}
+.k-head{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.k-count{background:#f3f4f6;border-radius:20px;padding:1px 6px;font-size:10px;color:#9ca3af}
+.k-card{background:#fff;border:1px solid #f3f4f6;border-radius:10px;padding:10px 11px;margin-bottom:6px;border-top:3px solid}
+.k-co{font-size:12px;font-weight:600;color:#111}
+.k-role{font-size:11px;color:#9ca3af;margin-top:2px;line-height:1.3}
+.k-date{font-size:10px;color:#d1d5db;margin-top:5px}
+.k-btns{display:flex;gap:3px;margin-top:7px}
+.k-btn{font-size:10px;padding:2px 7px;border-radius:5px;border:1px solid #e5e7eb;background:#fff;cursor:pointer;color:#6b7280;font-family:inherit}
+.k-del{border-color:#fee2e2;color:#ef4444;margin-left:auto}
+.add-form{background:#f9fafb;border:1px solid #e5e7eb;border-radius:11px;padding:12px;margin-bottom:12px;display:flex;gap:7px;flex-wrap:wrap}
+.add-form input{flex:1;min-width:110px;font-size:13px}
+.spinner{display:flex;align-items:center;gap:8px;color:#6b7280;font-size:13px;margin-top:14px}
+.spin-svg{animation:spin 1s linear infinite}
+.section-lbl{font-size:11px;font-weight:600;color:#9ca3af;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="logo-mark">✦</div>
+    HireAI
+  </div>
+  <div class="badges">
+    <span class="badge badge-green">✓ 100% Free</span>
+    <span class="badge badge-gray">No API key</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="tabs">
+    <button class="tab active" onclick="showTab(0)">📄 Resume</button>
+    <button class="tab" onclick="showTab(1)">💼 Jobs</button>
+    <button class="tab" onclick="showTab(2)">✉️ Cover Letter</button>
+    <button class="tab" onclick="showTab(3)">📋 Tracker</button>
+  </div>
+
+  <!-- RESUME -->
+  <div class="screen active" id="s0">
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileIn').click()"
+      ondragover="event.preventDefault();this.classList.add('over')"
+      ondragleave="this.classList.remove('over')"
+      ondrop="handleDrop(event)">
+      <div class="drop-icon">📄</div>
+      <div class="drop-title">Drop your resume (.txt) or click to upload</div>
+      <div class="drop-sub">Analyzed instantly in your browser — never stored or sent anywhere</div>
+      <input type="file" id="fileIn" accept=".txt,.md" style="display:none" onchange="loadFile(this)">
+    </div>
+    <label class="lbl" for="resumeText">or paste resume text</label>
+    <textarea id="resumeText" rows="5" placeholder="Paste your full resume here..."></textarea>
+    <div style="margin-top:10px;display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="doAnalyze()">Analyze Resume →</button>
+      <button class="btn btn-secondary" onclick="clearResume()">Clear</button>
+    </div>
+    <div class="spinner" id="aSpinner" style="display:none">
+      <svg class="spin-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+      Scanning resume...
+    </div>
+    <div id="results" style="display:none">
+      <div class="ring-wrap">
+        <div class="ring-item">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle cx="36" cy="36" r="27" fill="none" stroke="#f3f4f6" stroke-width="6"/>
+            <circle id="rAts" cx="36" cy="36" r="27" fill="none" stroke="#5f5ce8" stroke-width="6" stroke-linecap="round" transform="rotate(-90 36 36)" stroke-dasharray="0 170"/>
+            <text id="tAts" x="36" y="41" text-anchor="middle" fill="#5f5ce8" font-size="15" font-weight="600" font-family="monospace">0</text>
+          </svg>
+          <span class="ring-lbl">ATS Score</span>
+        </div>
+        <div class="ring-item">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle cx="36" cy="36" r="27" fill="none" stroke="#f3f4f6" stroke-width="6"/>
+            <circle id="rKw" cx="36" cy="36" r="27" fill="none" stroke="#f59e0b" stroke-width="6" stroke-linecap="round" transform="rotate(-90 36 36)" stroke-dasharray="0 170"/>
+            <text id="tKw" x="36" y="41" text-anchor="middle" fill="#f59e0b" font-size="15" font-weight="600" font-family="monospace">0</text>
+          </svg>
+          <span class="ring-lbl">Keywords</span>
+        </div>
+        <div class="ring-item">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle cx="36" cy="36" r="27" fill="none" stroke="#f3f4f6" stroke-width="6"/>
+            <circle id="rImp" cx="36" cy="36" r="27" fill="none" stroke="#10b981" stroke-width="6" stroke-linecap="round" transform="rotate(-90 36 36)" stroke-dasharray="0 170"/>
+            <text id="tImp" x="36" y="41" text-anchor="middle" fill="#10b981" font-size="15" font-weight="600" font-family="monospace">0</text>
+          </svg>
+          <span class="ring-lbl">Impact</span>
+        </div>
+      </div>
+      <div class="section-lbl">Recommendations</div>
+      <div class="fix-list" id="fixList"></div>
+    </div>
+  </div>
+
+  <!-- JOBS -->
+  <div class="screen" id="s1">
+    <input type="text" id="jobSearch" placeholder="Search roles or companies..." oninput="renderJobs()" style="margin-bottom:14px">
+    <div id="jobList"></div>
+  </div>
+
+  <!-- COVER LETTER -->
+  <div class="screen" id="s2">
+    <div style="margin-bottom:13px">
+      <label class="lbl" for="clJob">Job title & company</label>
+      <input type="text" id="clJob" value="Senior Product Manager at Stripe">
+    </div>
+    <div style="margin-bottom:15px">
+      <label class="lbl">Tone</label>
+      <div class="tone-row">
+        <button class="tone-btn active" onclick="setTone(this,'professional')">Professional</button>
+        <button class="tone-btn" onclick="setTone(this,'warm')">Warm</button>
+        <button class="tone-btn" onclick="setTone(this,'direct')">Direct</button>
+        <button class="tone-btn" onclick="setTone(this,'bold')">Bold</button>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="doLetter()" style="margin-bottom:16px">Generate Cover Letter →</button>
+    <div class="spinner" id="clSpinner" style="display:none">
+      <svg class="spin-svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+      Writing...
+    </div>
+    <div id="clOut" style="display:none">
+      <div class="letter-box" id="letterBox"></div>
+      <div style="display:flex;gap:8px;margin-top:11px">
+        <button class="btn btn-secondary" onclick="copyLetter()"><span id="copyLbl">📋 Copy</span></button>
+        <button class="btn btn-secondary" onclick="doLetter()">🔄 Regenerate</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRACKER -->
+  <div class="screen" id="s3">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-size:13px;color:#6b7280" id="appCount">4 applications</span>
+      <button class="btn btn-primary" onclick="toggleAdd()">+ Add</button>
+    </div>
+    <div class="add-form" id="addForm" style="display:none">
+      <input type="text" id="newCo" placeholder="Company *">
+      <input type="text" id="newRole" placeholder="Role">
+      <button class="btn btn-primary" onclick="addApp()">Save</button>
+    </div>
+    <div class="kanban" id="kanban"></div>
+  </div>
+</div>
+
+<script>
+const WEAK=["responsible for","helped","worked on","assisted","involved in","participated in","contributed to","supported","handled","tasked with"];
+const STRONG=["drove","shipped","built","launched","led","scaled","reduced","increased","designed","owned","delivered","grew"];
+const KW=["cross-functional","stakeholder","kpi","roadmap","agile","scrum","metrics","okr","strategy","product","analytics","revenue","growth","user","customer","pipeline","sprint","backlog","prioritization","mvp","roi","go-to-market","a/b test","experimentation","data-driven"];
+const IMPACT_RE=[/\d+%/,/\$[\d,]+/,/\d+x\b/i,/saved.*\d+/i,/grew.*\d+/i,/reduced.*\d+/i,/increased.*\d+/i,/million/i,/thousand/i];
+const SECTIONS=["experience","education","skills","summary","projects","certifications"];
+const CIRC=2*Math.PI*27;
+
+let tone="professional";
+let addOpen=false;
+let jobScores={};
+let apps=[
+  {id:1,company:"Figma",role:"Product Manager",stage:"Screening",date:"Interview Fri",color:"#ef4444"},
+  {id:2,company:"Vercel",role:"Sr PM — Platform",stage:"Interview",date:"Final round",color:"#374151"},
+  {id:3,company:"Stripe",role:"Sr PM — Growth",stage:"Applied",date:"2 days ago",color:"#5f5ce8"},
+  {id:4,company:"Linear",role:"Product Lead",stage:"Applied",date:"5 days ago",color:"#f59e0b"},
+];
+const STAGES=["Applied","Screening","Interview","Offer"];
+const STAGE_COLORS={Applied:"#6b7280",Screening:"#f59e0b",Interview:"#5f5ce8",Offer:"#10b981"};
+const JOBS=[
+  {id:1,co:"Stripe",init:"ST",role:"Senior Product Manager — Growth",loc:"Remote",sal:"$160–190k",tags:["Fintech","Remote"],col:"#5f5ce8",desc:"fintech payments product roadmap growth metrics experimentation strategy"},
+  {id:2,co:"Linear",init:"LN",role:"Product Lead — Platform",loc:"San Francisco",sal:"$140–170k",tags:["SaaS","Hybrid"],col:"#f59e0b",desc:"developer tools platform engineering saas roadmap agile scrum"},
+  {id:3,co:"Notion",init:"NT",role:"Senior PM — Dev Experience",loc:"Remote",sal:"$155–185k",tags:["Dev Tools","Remote"],col:"#10b981",desc:"developer experience api documentation engineering product strategy"},
+  {id:4,co:"Figma",init:"FG",role:"Product Manager — Editor",loc:"San Francisco",sal:"$150–175k",tags:["Design","Hybrid"],col:"#ef4444",desc:"design tools editor user experience collaboration cross-functional"},
+  {id:5,co:"Vercel",init:"VC",role:"Senior PM — Infrastructure",loc:"Remote",sal:"$165–195k",tags:["Dev Infra","Remote"],col:"#374151",desc:"infrastructure deployment cloud developer platform engineering metrics"},
+];
+
+function showTab(i){
+  document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',i===j));
+  document.querySelectorAll('.screen').forEach((s,j)=>s.classList.toggle('active',i===j));
+  if(i===1)renderJobs();
+  if(i===3)renderKanban();
+}
+
+function getResume(){return document.getElementById('resumeText').value.trim();}
+function clearResume(){document.getElementById('resumeText').value='';document.getElementById('results').style.display='none';}
+
+function analyzeResume(text){
+  const low=text.toLowerCase();
+  const sents=text.split(/[.!\n]+/).filter(s=>s.trim().length>8);
+  let ats=48;
+  ats+=Math.min(SECTIONS.filter(k=>low.includes(k)).length*5,25);
+  if(text.length>600)ats+=10;
+  if(text.length>1800)ats+=8;
+  if(!/[|│\t]/.test(text))ats+=7;
+  ats=Math.min(ats,97);
+  const kw=Math.min(Math.round((KW.filter(k=>low.includes(k)).length/KW.length)*100*1.9),96);
+  const impSents=sents.filter(s=>IMPACT_RE.some(r=>r.test(s)));
+  const imp=Math.min(Math.round((impSents.length/Math.max(sents.length,1))*100*3.2),94);
+  const fixes=[];
+  const weak=WEAK.filter(v=>low.includes(v));
+  if(weak.length)fixes.push({pri:"high",icon:"⛔",col:"#ef4444",text:`Weak verbs found: "${weak.slice(0,2).join('", "')}" — swap with impact verbs like "${STRONG.slice(0,3).join('", "')}"`,sub:"high priority"});
+  if(impSents.length<3)fixes.push({pri:"high",icon:"💡",col:"#10b981",text:`Only ${impSents.length} bullet${impSents.length===1?"":"s"} have numbers — add %, $, or time metrics to at least 3 more`,sub:"high priority"});
+  const miss=KW.filter(k=>!low.includes(k)).slice(0,4);
+  if(miss.length)fixes.push({pri:"medium",icon:"⚠️",col:"#f59e0b",text:`Missing ATS keywords: "${miss.join('", "')}" — add them naturally in context`,sub:"medium priority"});
+  if(!low.includes("summary")&&!low.includes("objective"))fixes.push({pri:"medium",icon:"⚠️",col:"#f59e0b",text:"No summary section detected — add 2 lines at the top so recruiters don't bounce in 6 seconds",sub:"medium priority"});
+  else fixes.push({pri:"low",icon:"💡",col:"#10b981",text:"Move Skills above Work Experience for better ATS parsing on most platforms",sub:"low priority"});
+  return{ats,kw,imp,fixes:fixes.slice(0,4)};
+}
+
+function animateRing(circId,textId,score){
+  const circ=document.getElementById(circId);
+  const txt=document.getElementById(textId);
+  let cur=0;
+  const step=()=>{cur=Math.min(cur+2,score);const d=(cur/100)*CIRC;circ.setAttribute('stroke-dasharray',`${d} ${CIRC}`);txt.textContent=cur;if(cur<score)requestAnimationFrame(step);};
+  requestAnimationFrame(step);
+}
+
+function doAnalyze(){
+  const text=getResume();if(!text)return;
+  document.getElementById('aSpinner').style.display='flex';
+  document.getElementById('results').style.display='none';
+  setTimeout(()=>{
+    const r=analyzeResume(text);
+    document.getElementById('aSpinner').style.display='none';
+    document.getElementById('results').style.display='block';
+    animateRing('rAts','tAts',r.ats);
+    animateRing('rKw','tKw',r.kw);
+    animateRing('rImp','tImp',r.imp);
+    document.getElementById('fixList').innerHTML=r.fixes.map(f=>`<div class="fix-card" style="border-left:3px solid ${f.col};border-radius:0 11px 11px 0"><span style="font-size:16px;flex-shrink:0">${f.icon}</span><div><div class="fix-text">${f.text}</div><div class="fix-sub">${f.sub}</div></div></div>`).join('');
+  },800);
+}
+
+function loadFile(input){
+  const f=input.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=e=>{document.getElementById('resumeText').value=e.target.result;doAnalyze();};
+  r.readAsText(f);
+}
+function handleDrop(e){
+  e.preventDefault();document.getElementById('dropZone').classList.remove('over');
+  loadFile({files:e.dataTransfer.files});
+}
+
+function matchJob(job){
+  const text=getResume()||"product management roadmap strategy metrics stakeholder agile data analytics growth";
+  const low=text.toLowerCase();
+  const words=(job.desc+" "+job.tags.join(" ")).toLowerCase().split(/\W+/).filter(w=>w.length>4);
+  const matched=words.filter(w=>low.includes(w));
+  const score=Math.min(Math.round(42+(matched.length/Math.max(words.length,1))*78),96);
+  const gaps=words.filter(w=>!low.includes(w)&&w.length>5).slice(0,2);
+  const strengths=matched.filter(w=>w.length>5).slice(0,2);
+  return{score,gaps,strengths};
+}
+
+function renderJobs(){
+  const q=(document.getElementById('jobSearch').value||"").toLowerCase();
+  const list=document.getElementById('jobList');
+  list.innerHTML=JOBS.filter(j=>!q||j.role.toLowerCase().includes(q)||j.co.toLowerCase().includes(q)).map(job=>{
+    const s=jobScores[job.id];
+    const sc=s?s.score:null;
+    const scCol=sc?(sc>=80?"#15803d":sc>=65?"#b45309":"#dc2626"):"";
+    const scBg=sc?(sc>=80?"#f0fdf4":sc>=65?"#fffbeb":"#fef2f2"):"";
+    return`<div class="job-card"><div class="job-row">
+      <div class="initials-box" style="background:${job.col}18;color:${job.col}">${job.init}</div>
+      <div style="flex:1;min-width:0">
+        <div class="job-title">${job.role}</div>
+        <div class="job-meta">${job.co} · ${job.loc} · ${job.sal}</div>
+        <div class="tags">${job.tags.map(t=>`<span class="tag">${t}</span>`).join('')}${s?`<span class="tag tag-match" style="background:${scBg};color:${scCol}">${sc}% match</span>`:""}</div>
+        ${s?`<div class="match-detail"><span style="color:#15803d">✓ ${s.strengths[0]||"Strong overall fit"}</span>${s.gaps[0]?` &nbsp;<span style="color:#b45309">⚠ Gap: ${s.gaps[0]}</span>`:""}</div>`:""}
+      </div>
+      <button class="btn btn-secondary" style="${s?"background:#f0fdf4;color:#15803d;border-color:#bbf7d0":""}" onclick="runMatch(${job.id})" ${s?"disabled":""}>
+        ${s?"Matched ✓":"Match me"}
+      </button>
+    </div></div>`;
+  }).join('');
+}
+
+function runMatch(id){
+  const job=JOBS.find(j=>j.id===id);if(!job)return;
+  jobScores[id]=matchJob(job);renderJobs();
+}
+
+function setTone(btn,t){
+  tone=t;
+  document.querySelectorAll('.tone-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function doLetter(){
+  const job=document.getElementById('clJob').value||"this role";
+  const text=getResume();
+  document.getElementById('clSpinner').style.display='flex';
+  document.getElementById('clOut').style.display='none';
+  setTimeout(()=>{
+    const low=(text||"").toLowerCase();
+    const yoe=(text.match(/(\d+)\+?\s*years?/i)||[])[1]||"several";
+    const prevCo=(text.match(/at\s+([A-Z][a-zA-Z]+)/)||[])[1]||"my last company";
+    const skillList=["product strategy","data analysis","cross-functional teams","roadmap planning","growth","engineering collaboration","stakeholder management"];
+    const found=skillList.filter(s=>low.includes(s.split(" ")[0])).slice(0,2);
+    const skills=found.length?found.join(" and "):"product strategy and execution";
+    const opens={professional:`I am writing to express my strong interest in the ${job} position.`,warm:`I have been following your work closely, and the ${job} role feels like a genuine match for where I want to take my career.`,direct:`${job} — this is exactly the role I have been building toward.`,bold:`Most candidates will say they are passionate about the role. I would rather show you: I have spent ${yoe}+ years doing exactly what this job requires.`};
+    const closes={professional:"I would welcome the opportunity to discuss how my background aligns with your goals.",warm:"I would love to chat — I think there is a lot we could build together.",direct:"Let's talk. I'm ready to hit the ground running.",bold:"I don't just want to fill this role — I want to own it. Let's connect."};
+    const letter=`Dear Hiring Team,\n\n${opens[tone]}\n\nOver the past ${yoe} years I have built deep expertise in ${skills}. At ${prevCo} I delivered measurable results by combining clear prioritization with a bias for shipping — and I would bring that same energy to this role from day one.\n\nWhat draws me to this opportunity is the chance to work on problems at scale. I thrive where ambiguity is the norm and impact is measurable, and everything I have read about your team suggests that is exactly the culture you have built.\n\n${closes[tone]}\n\nBest regards`;
+    document.getElementById('clSpinner').style.display='none';
+    document.getElementById('clOut').style.display='block';
+    document.getElementById('letterBox').textContent=letter;
+  },600);
+}
+
+function copyLetter(){
+  navigator.clipboard.writeText(document.getElementById('letterBox').textContent);
+  const l=document.getElementById('copyLbl');l.textContent='✓ Copied!';
+  setTimeout(()=>l.textContent='📋 Copy',2000);
+}
+
+function renderKanban(){
+  document.getElementById('appCount').textContent=apps.length+' application'+(apps.length===1?"":"s");
+  document.getElementById('kanban').innerHTML=STAGES.map(stage=>{
+    const sa=apps.filter(a=>a.stage===stage);
+    return`<div><div class="k-head" style="color:${STAGE_COLORS[stage]}">${stage}<span class="k-count">${sa.length}</span></div>
+    ${sa.map(a=>`<div class="k-card" style="border-top-color:${a.color}">
+      <div class="k-co">${a.company}</div>
+      <div class="k-role">${a.role}</div>
+      <div class="k-date">${a.date}</div>
+      <div class="k-btns">
+        ${STAGES.indexOf(a.stage)>0?`<button class="k-btn" onclick="moveApp(${a.id},-1)">←</button>`:""}
+        ${STAGES.indexOf(a.stage)<3?`<button class="k-btn" onclick="moveApp(${a.id},1)">→</button>`:""}
+        <button class="k-btn k-del" onclick="delApp(${a.id})">✕</button>
+      </div>
+    </div>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+function moveApp(id,dir){
+  apps=apps.map(a=>{if(a.id!==id)return a;const ni=STAGES.indexOf(a.stage)+dir;return(ni>=0&&ni<4)?{...a,stage:STAGES[ni]}:a;});
+  renderKanban();
+}
+function delApp(id){apps=apps.filter(a=>a.id!==id);renderKanban();}
+function toggleAdd(){addOpen=!addOpen;document.getElementById('addForm').style.display=addOpen?'flex':'none';}
+function addApp(){
+  const co=document.getElementById('newCo').value.trim();if(!co)return;
+  const colors=["#5f5ce8","#f59e0b","#10b981","#ef4444","#8b5cf6"];
+  apps.push({id:Date.now(),company:co,role:document.getElementById('newRole').value.trim()||"Role TBD",stage:"Applied",date:"Just now",color:colors[apps.length%colors.length]});
+  document.getElementById('newCo').value='';document.getElementById('newRole').value='';
+  toggleAdd();renderKanban();
+}
+
+renderJobs();renderKanban();
+</script>
+
+<footer style="text-align:center;padding:20px;color:#666;font-size:14px">
+Built by Misba Patel | AI &amp; DS Student
+</footer>
+
+</body>
+</html>
